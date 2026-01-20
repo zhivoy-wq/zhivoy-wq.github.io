@@ -145,11 +145,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Register user
-        users.push({ email, username, password, balance: username === 'admin' ? 999999 : 1000, gamesPlayed: 0 });
+        let balance = 1000;
+        if (username === 'admin' && password === 'adminpass') {
+            balance = 999999;
+        } else if (username === 'admin') {
+            alert('Invalid admin credentials!');
+            return;
+        }
+        users.push({ email, username, password, balance, gamesPlayed: 0 });
         localStorage.setItem('users', JSON.stringify(users));
         localStorage.setItem('currentUser', JSON.stringify({ email, username }));
 
-        alert(`Registration successful! You start with ${username === 'admin' ? '999999' : '1000'} credits.`);
+        alert(`Registration successful! You start with ${balance} credits.`);
         registerModal.style.display = 'none';
         updateUI();
     });
