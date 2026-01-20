@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     playBtns.forEach(btn => {
         btn.addEventListener('click', () => {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) {
+                alert('Please login to play games!');
+                return;
+            }
             const game = btn.getAttribute('data-game');
             loadGame(game);
             gameModal.style.display = 'block';
