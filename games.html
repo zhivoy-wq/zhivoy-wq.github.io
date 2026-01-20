@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVSD Grand Casino - Games</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1 class="neon">MVSD Grand Casino</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="games.html">Games</a>
+            <a href="leaderboard.html">Leaderboard</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+        <div id="auth-buttons">
+            <button id="login-btn" class="btn-small">Login</button>
+            <button id="register-btn" class="btn-small">Register</button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Play Our Exciting Games</h2>
+            <p>Test your luck and win big! All games are provably fair.</p>
+        </div>
+    </section>
+
+    <section class="games-section">
+        <h3 class="neon-gold">Available Games</h3>
+        <div class="game-grid">
+            <div class="game-card">
+                <h4>🎰 Slots</h4>
+                <p>Spin the reels and hit the jackpot!</p>
+                <button class="btn play-btn" data-game="slots">Play Slots</button>
+            </div>
+            <div class="game-card">
+                <h4>🎲 Dice</h4>
+                <p>Roll the dice and predict the outcome.</p>
+                <button class="btn play-btn" data-game="dice">Play Dice</button>
+            </div>
+            <div class="game-card">
+                <h4>🎡 Roulette</h4>
+                <p>Place your bets on the wheel.</p>
+                <button class="btn play-btn" data-game="roulette">Play Roulette</button>
+            </div>
+            <div class="game-card">
+                <h4>💥 Crash</h4>
+                <p>Cash out before it crashes!</p>
+                <button class="btn play-btn" data-game="crash">Play Crash</button>
+            </div>
+            <div class="game-card">
+                <h4>🪙 Coinflip</h4>
+                <p>Heads or tails betting.</p>
+                <button class="btn play-btn" data-game="coinflip">Play Coinflip</button>
+            </div>
+            <div class="game-card">
+                <h4>📦 Lootboxes</h4>
+                <p>Open mystery boxes for rewards.</p>
+                <button class="btn play-btn" data-game="lootbox">Open Lootbox</button>
+            </div>
+        </div>
+    </section>
+
+    <div id="game-modal" class="modal">
+        <div class="modal-content game-modal-content">
+            <span class="close">&times;</span>
+            <div id="game-container"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 MVSD Grand Casino. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="games.js"></script>
+</body>
+</html>
