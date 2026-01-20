@@ -218,6 +218,8 @@ footer p {
     width: 80%;
     max-width: 400px;
     box-shadow: 0 0 20px rgba(255, 0, 128, 0.5);
+    position: relative;
+    z-index: 1001;
 }
 
 .close {
@@ -324,6 +326,8 @@ footer p {
     width: 80%;
     max-width: 400px;
     box-shadow: 0 0 20px rgba(255, 0, 128, 0.5);
+    position: relative;
+    z-index: 1001;
 }
 
 .close {
@@ -580,6 +584,8 @@ footer p {
 .admin-section {
     padding: 80px 20px;
     text-align: center;
+    position: relative;
+    z-index: 1;
 }
 
 .admin-container {
