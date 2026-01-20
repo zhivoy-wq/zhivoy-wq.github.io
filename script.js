@@ -140,19 +140,27 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check if user already exists
         const users = JSON.parse(localStorage.getItem('users')) || [];
         if (users.find(user => user.email === email)) {
-            alert('User already exists!');
+            alert('Email already exists!');
+            return;
+        }
+        if (users.find(user => user.username === username)) {
+            alert('Username already taken!');
             return;
         }
 
         // Register user
         let balance = 1000;
         if (username === 'admin' && password === 'adminpass') {
+            if (users.find(user => user.username === 'admin')) {
+                alert('Admin already exists!');
+                return;
+            }
             balance = 999999;
         } else if (username === 'admin') {
             alert('Invalid admin credentials!');
             return;
         }
-        users.push({ email, username, password, balance, gamesPlayed: 0 });
+        users.push({ email, username, password, balance, gamesPlayed: 0, inventory: [] });
         localStorage.setItem('users', JSON.stringify(users));
         localStorage.setItem('currentUser', JSON.stringify({ email, username }));
 
