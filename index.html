@@ -3,54 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVSD Grand Casino</title>
+    <title>MVSD Grand Casino - Home</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <h1 class="neon">MVSD Grand Casino</h1>
         <nav>
-            <a href="#home">Home</a>
-            <a href="#games">Games</a>
-            <a href="#about">About</a>
-            <a href="#contact">Contact</a>
+            <a href="index.html">Home</a>
+            <a href="games.html">Games</a>
+            <a href="leaderboard.html">Leaderboard</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
         </nav>
+        <div id="auth-buttons">
+            <button id="login-btn" class="btn-small">Login</button>
+            <button id="register-btn" class="btn-small">Register</button>
+        </div>
     </header>
 
     <section id="home" class="hero">
         <div class="hero-content">
             <h2>Welcome to the Ultimate Gaming Experience</h2>
             <p>Experience the thrill of casino games in our Discord server. Play, win, and have fun!</p>
-            <a href="#" class="btn">Join Our Discord</a>
+            <a href="games.html" class="btn">Play Games</a>
         </div>
     </section>
 
-    <section id="games" class="features">
-        <h3 class="neon-gold">Our Games</h3>
+    <!-- Authentication Modals -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login</h2>
+            <form id="login-form">
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <p>Don't have an account? <a href="#" id="switch-to-register">Register here</a></p>
+        </div>
+    </div>
+
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Register</h2>
+            <form id="register-form">
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="text" id="register-username" placeholder="Username" required>
+                <input type="password" id="register-password" placeholder="Password" required>
+                <button type="submit">Register</button>
+            </form>
+            <p>Already have an account? <a href="#" id="switch-to-login">Login here</a></p>
+        </div>
+    </div>
+
+    <section id="features" class="features">
+        <h3 class="neon-gold">Why Choose MVSD Grand Casino?</h3>
         <div class="feature-grid">
             <div class="feature">
-                <h4>🎰 Slots</h4>
-                <p>Spin the reels and hit the jackpot in our exciting slot machines.</p>
+                <h4>🎰 Exciting Games</h4>
+                <p>Play slots, roulette, dice, crash, coinflip, and more with real-time action.</p>
             </div>
             <div class="feature">
-                <h4>🎲 Dice</h4>
-                <p>Test your luck with our dice rolling games.</p>
+                <h4>💰 Virtual Currency</h4>
+                <p>Earn and spend credits in our integrated economy system.</p>
             </div>
             <div class="feature">
-                <h4>🎡 Roulette</h4>
-                <p>Place your bets on the wheel of fortune.</p>
+                <h4>🏆 Leaderboards</h4>
+                <p>Compete with players worldwide and climb the ranks.</p>
             </div>
             <div class="feature">
-                <h4>💥 Crash</h4>
-                <p>Ride the multiplier and cash out before it crashes!</p>
+                <h4>📦 Loot Boxes</h4>
+                <p>Open mystery boxes for rare skins and exclusive rewards.</p>
             </div>
             <div class="feature">
-                <h4>🪙 Coinflip</h4>
-                <p>Simple heads or tails betting game.</p>
+                <h4>🔒 Secure & Fair</h4>
+                <p>Provably fair games with transparent mechanics.</p>
             </div>
             <div class="feature">
-                <h4>📦 Lootboxes</h4>
-                <p>Open mystery boxes for exciting rewards.</p>
+                <h4>🌐 Cross-Platform</h4>
+                <p>Play on Discord or directly on our website.</p>
             </div>
         </div>
     </section>
