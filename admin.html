@@ -37,6 +37,24 @@
                 <div id="users-list" class="admin-list"></div>
             </div>
             <div class="admin-panel">
+                <h3 class="neon-gold">Inventory Management</h3>
+                <button id="view-house-inventory-btn" class="btn">View House Inventory</button>
+                <button id="manage-shop-btn" class="btn">Manage Shop</button>
+                <div id="inventory-list" class="admin-list"></div>
+            </div>
+            <div class="admin-panel">
+                <h3 class="neon-gold">Game Settings</h3>
+                <button id="adjust-payouts-btn" class="btn">Adjust Payouts</button>
+                <button id="adjust-chances-btn" class="btn">Adjust Chances</button>
+                <div id="settings-list" class="admin-list"></div>
+            </div>
+            <div class="admin-panel">
+                <h3 class="neon-gold">Lootbox Management</h3>
+                <button id="view-lootboxes-btn" class="btn">View Lootboxes</button>
+                <button id="create-lootbox-btn" class="btn">Create Lootbox</button>
+                <div id="lootbox-list" class="admin-list"></div>
+            </div>
+            <div class="admin-panel">
                 <h3 class="neon-gold">Game Statistics</h3>
                 <div id="game-stats"></div>
             </div>
@@ -91,6 +109,12 @@
             }
 
             document.getElementById('view-users-btn').addEventListener('click', viewUsers);
+            document.getElementById('view-house-inventory-btn').addEventListener('click', viewHouseInventory);
+            document.getElementById('manage-shop-btn').addEventListener('click', manageShop);
+            document.getElementById('adjust-payouts-btn').addEventListener('click', adjustPayouts);
+            document.getElementById('adjust-chances-btn').addEventListener('click', adjustChances);
+            document.getElementById('view-lootboxes-btn').addEventListener('click', viewLootboxes);
+            document.getElementById('create-lootbox-btn').addEventListener('click', createLootbox);
             document.getElementById('reset-data-btn').addEventListener('click', resetData);
             document.getElementById('export-data-btn').addEventListener('click', exportData);
 
@@ -109,6 +133,7 @@
                         <span>Games: ${user.gamesPlayed || 0}</span>
                         <button onclick="adjustBalance('${user.email}', 100)">+100</button>
                         <button onclick="adjustBalance('${user.email}', -100)">-100</button>
+                        <button onclick="viewUserInventory('${user.email}')">View Inventory</button>
                     </div>
                 `;
             });
@@ -147,18 +172,106 @@
             }
         }
 
-        function exportData() {
-            const data = {
-                users: JSON.parse(localStorage.getItem('users')) || [],
-                timestamp: new Date().toISOString()
-            };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'casino-data-export.json';
-            a.click();
-            URL.revokeObjectURL(url);
+        function viewUserInventory(email) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === email);
+            if (user) {
+                const inventory = user.inventory || [];
+                alert(`Inventory for ${user.username}:\n${inventory.length ? inventory.join('\n') : 'Empty'}`);
+            }
+        }
+
+        function viewHouseInventory() {
+            const houseInventory = JSON.parse(localStorage.getItem('houseInventory')) || [];
+            const inventoryList = document.getElementById('inventory-list');
+            inventoryList.innerHTML = '<h4>House Inventory:</h4>';
+            if (houseInventory.length) {
+                houseInventory.forEach(item => {
+                    inventoryList.innerHTML += `<div>${item.name} (Value: ${item.value})</div>`;
+                });
+            } else {
+                inventoryList.innerHTML += '<p>Empty</p>';
+            }
+        }
+
+        function manageShop() {
+            // Simple shop management: add skins to shop
+            const skins = JSON.parse(localStorage.getItem('skins')) || [];
+            if (!skins.length) {
+                // Load skins if not loaded
+                fetch('data/skins.json').then(r => r.json()).then(data => {
+                    localStorage.setItem('skins', JSON.stringify(data));
+                    manageShop();
+                });
+                return;
+            }
+            const shop = JSON.parse(localStorage.getItem('shop')) || [];
+            const inventoryList = document.getElementById('inventory-list');
+            inventoryList.innerHTML = '<h4>Shop Management:</h4>';
+            skins.slice(0, 10).forEach(skin => {
+                const inShop = shop.find(s => s.name === skin.name);
+                inventoryList.innerHTML += `
+                    <div>
+                        ${skin.name} (${skin.value})
+                        ${inShop ? '<button onclick="removeFromShop(\'' + skin.name + '\')">Remove from Shop</button>' : '<button onclick="addToShop(\'' + skin.name + '\')">Add to Shop</button>'}
+                    </div>
+                `;
+            });
+        }
+
+        function addToShop(name) {
+            const skins = JSON.parse(localStorage.getItem('skins')) || [];
+            const shop = JSON.parse(localStorage.getItem('shop')) || [];
+            const skin = skins.find(s => s.name === name);
+            if (skin && !shop.find(s => s.name === name)) {
+                shop.push(skin);
+                localStorage.setItem('shop', JSON.stringify(shop));
+                manageShop();
+            }
+        }
+
+        function removeFromShop(name) {
+            const shop = JSON.parse(localStorage.getItem('shop')) || [];
+            const newShop = shop.filter(s => s.name !== name);
+            localStorage.setItem('shop', JSON.stringify(newShop));
+            manageShop();
+        }
+
+        function adjustPayouts() {
+            const settingsList = document.getElementById('settings-list');
+            settingsList.innerHTML = '<h4>Adjust Payouts:</h4>';
+            // Placeholder for adjusting payouts
+            settingsList.innerHTML += '<p>Payout adjustment not implemented yet.</p>';
+        }
+
+        function adjustChances() {
+            const settingsList = document.getElementById('settings-list');
+            settingsList.innerHTML = '<h4>Adjust Chances:</h4>';
+            // Placeholder
+            settingsList.innerHTML += '<p>Chance adjustment not implemented yet.</p>';
+        }
+
+        function viewLootboxes() {
+            const lootboxes = JSON.parse(localStorage.getItem('lootboxes')) || [];
+            const lootboxList = document.getElementById('lootbox-list');
+            lootboxList.innerHTML = '<h4>Lootboxes:</h4>';
+            if (lootboxes.length) {
+                lootboxes.forEach(lb => {
+                    lootboxList.innerHTML += `<div>${lb.name}: ${lb.items ? lb.items.length : 0} items</div>`;
+                });
+            } else {
+                lootboxList.innerHTML += '<p>No lootboxes</p>';
+            }
+        }
+
+        function createLootbox() {
+            const name = prompt('Lootbox name:');
+            if (name) {
+                const lootboxes = JSON.parse(localStorage.getItem('lootboxes')) || [];
+                lootboxes.push({ name, items: [] });
+                localStorage.setItem('lootboxes', JSON.stringify(lootboxes));
+                viewLootboxes();
+            }
         }
     </script>
 </body>
