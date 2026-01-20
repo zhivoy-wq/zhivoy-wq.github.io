@@ -188,6 +188,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Show inventory
+    function showInventory() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) return;
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(u => u.email === currentUser.email);
+        const inventory = user.inventory || [];
+        let msg = `Inventory for ${currentUser.username}:\n`;
+        if (inventory.length) {
+            inventory.forEach(item => msg += `- ${item.name} (${item.value})\n`);
+        } else {
+            msg += 'Empty';
+        }
+        alert(msg);
+    }
+
     // Update UI based on login status
     function updateUI() {
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -198,6 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('auth-buttons').innerHTML = `
                 <span>Welcome, ${currentUser.username}!</span>
                 <span>Balance: ${balance} credits</span>
+                <button id="inventory-btn" class="btn-small">Inventory</button>
                 <button id="logout-btn" class="btn-small">Logout</button>
             `;
             if (currentUser.username === 'admin') {
@@ -207,6 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.removeItem('currentUser');
                 updateUI();
             });
+            document.getElementById('inventory-btn').addEventListener('click', showInventory);
         } else {
             document.getElementById('auth-buttons').innerHTML = `
                 <button id="login-btn" class="btn-small">Login</button>
