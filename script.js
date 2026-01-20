@@ -1,7 +1,9 @@
 // script.js
 document.addEventListener('DOMContentLoaded', function() {
-    // Smooth scrolling for navigation links
-    const navLinks = document.querySelectorAll('nav a');
+    // Existing code...
+
+    // Smooth scrolling for navigation links (if on same page)
+    const navLinks = document.querySelectorAll('nav a[href^="#"]');
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
@@ -76,4 +78,135 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(style);
+
+    // Authentication logic
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const loginModal = document.getElementById('login-modal');
+    const registerModal = document.getElementById('register-modal');
+    const closeBtns = document.querySelectorAll('.close');
+    const switchToRegister = document.getElementById('switch-to-register');
+    const switchToLogin = document.getElementById('switch-to-login');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+
+    // Show modals
+    loginBtn.addEventListener('click', () => {
+        loginModal.style.display = 'block';
+    });
+
+    registerBtn.addEventListener('click', () => {
+        registerModal.style.display = 'block';
+    });
+
+    // Close modals
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            loginModal.style.display = 'none';
+            registerModal.style.display = 'none';
+        });
+    });
+
+    // Switch between modals
+    switchToRegister.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginModal.style.display = 'none';
+        registerModal.style.display = 'block';
+    });
+
+    switchToLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerModal.style.display = 'none';
+        loginModal.style.display = 'block';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        if (e.target === loginModal) {
+            loginModal.style.display = 'none';
+        }
+        if (e.target === registerModal) {
+            registerModal.style.display = 'none';
+        }
+    });
+
+    // Handle registration
+    registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('register-email').value;
+        const username = document.getElementById('register-username').value;
+        const password = document.getElementById('register-password').value;
+
+        // Check if user already exists
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        if (users.find(user => user.email === email)) {
+            alert('User already exists!');
+            return;
+        }
+
+        // Register user
+        users.push({ email, username, password, balance: username === 'admin' ? 999999 : 1000, gamesPlayed: 0 });
+        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem('currentUser', JSON.stringify({ email, username }));
+
+        alert(`Registration successful! You start with ${username === 'admin' ? '999999' : '1000'} credits.`);
+        registerModal.style.display = 'none';
+        updateUI();
+    });
+
+    // Handle login
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(user => user.email === email && user.password === password);
+
+        if (user) {
+            localStorage.setItem('currentUser', JSON.stringify({ email: user.email, username: user.username }));
+            alert('Login successful!');
+            loginModal.style.display = 'none';
+            updateUI();
+        } else {
+            alert('Invalid credentials!');
+        }
+    });
+
+    // Update UI based on login status
+    function updateUI() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (currentUser) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === currentUser.email);
+            const balance = user ? user.balance : 0;
+            document.getElementById('auth-buttons').innerHTML = `
+                <span>Welcome, ${currentUser.username}!</span>
+                <span>Balance: ${balance} credits</span>
+                <button id="logout-btn" class="btn-small">Logout</button>
+            `;
+            if (currentUser.username === 'admin') {
+                document.getElementById('auth-buttons').innerHTML += `<a href="admin.html" class="btn-small">Admin</a>`;
+            }
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('currentUser');
+                updateUI();
+            });
+        } else {
+            document.getElementById('auth-buttons').innerHTML = `
+                <button id="login-btn" class="btn-small">Login</button>
+                <button id="register-btn" class="btn-small">Register</button>
+            `;
+            // Reattach event listeners
+            document.getElementById('login-btn').addEventListener('click', () => {
+                loginModal.style.display = 'block';
+            });
+            document.getElementById('register-btn').addEventListener('click', () => {
+                registerModal.style.display = 'block';
+            });
+        }
+    }
+
+    // Initialize UI
+    updateUI();
 });
