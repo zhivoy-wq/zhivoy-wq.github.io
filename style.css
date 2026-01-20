@@ -30,6 +30,8 @@ header {
     align-items: center;
     box-shadow: 0 0 20px rgba(255, 0, 128, 0.5);
     animation: pulse 2s infinite;
+    position: relative;
+    z-index: 10;
 }
 
 @keyframes pulse {
@@ -198,7 +200,7 @@ footer p {
 .modal {
     display: none;
     position: fixed;
-    z-index: 1;
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
@@ -280,6 +282,8 @@ footer p {
     display: flex;
     align-items: center;
     gap: 10px;
+    position: relative;
+    z-index: 11;
 }
 
 #auth-buttons button, #auth-buttons a {
@@ -302,7 +306,7 @@ footer p {
 .modal {
     display: none;
     position: fixed;
-    z-index: 1;
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
