@@ -12,6 +12,7 @@
         <nav>
             <a href="index.html">Home</a>
             <a href="games.html">Games</a>
+            <a href="shop.html">Shop</a>
             <a href="leaderboard.html">Leaderboard</a>
             <a href="about.html">About</a>
             <a href="contact.html">Contact</a>
@@ -124,19 +125,23 @@
         function viewUsers() {
             const users = JSON.parse(localStorage.getItem('users')) || [];
             const usersList = document.getElementById('users-list');
-            usersList.innerHTML = '<h4>All Users:</h4>';
+            usersList.innerHTML = '<h4>All Users:</h4><table><tr><th>Username</th><th>Email</th><th>Balance</th><th>Games</th><th>Actions</th></tr>';
             users.forEach(user => {
                 usersList.innerHTML += `
-                    <div class="user-item">
-                        <span>${user.username} (${user.email})</span>
-                        <span>Balance: ${user.balance}</span>
-                        <span>Games: ${user.gamesPlayed || 0}</span>
-                        <button onclick="adjustBalance('${user.email}', 100)">+100</button>
-                        <button onclick="adjustBalance('${user.email}', -100)">-100</button>
-                        <button onclick="viewUserInventory('${user.email}')">View Inventory</button>
-                    </div>
+                    <tr>
+                        <td>${user.username}</td>
+                        <td>${user.email}</td>
+                        <td>${user.balance}</td>
+                        <td>${user.gamesPlayed || 0}</td>
+                        <td>
+                            <button onclick="adjustBalance('${user.email}', 100)">+100</button>
+                            <button onclick="adjustBalance('${user.email}', -100)">-100</button>
+                            <button onclick="viewUserInventory('${user.email}')">View Inv</button>
+                        </td>
+                    </tr>
                 `;
             });
+            usersList.innerHTML += '</table>';
         }
 
         function adjustBalance(email, amount) {
@@ -238,37 +243,91 @@
         }
 
         function adjustPayouts() {
+            const settings = JSON.parse(localStorage.getItem('gameSettings')) || {};
             const settingsList = document.getElementById('settings-list');
             settingsList.innerHTML = '<h4>Adjust Payouts:</h4>';
-            // Placeholder for adjusting payouts
-            settingsList.innerHTML += '<p>Payout adjustment not implemented yet.</p>';
+            ['slots', 'dice', 'roulette', 'crash', 'coinflip'].forEach(game => {
+                const payout = settings[game]?.payout || 10;
+                settingsList.innerHTML += `
+                    <div>
+                        ${game}: <input type="number" id="payout-${game}" value="${payout}">
+                        <button onclick="setPayout('${game}')">Set</button>
+                    </div>
+                `;
+            });
+        }
+
+        function setPayout(game) {
+            const val = parseInt(document.getElementById(`payout-${game}`).value);
+            const settings = JSON.parse(localStorage.getItem('gameSettings')) || {};
+            settings[game] = settings[game] || {};
+            settings[game].payout = val;
+            localStorage.setItem('gameSettings', JSON.stringify(settings));
+            alert(`Payout for ${game} set to ${val}`);
         }
 
         function adjustChances() {
+            const settings = JSON.parse(localStorage.getItem('gameSettings')) || {};
             const settingsList = document.getElementById('settings-list');
             settingsList.innerHTML = '<h4>Adjust Chances:</h4>';
-            // Placeholder
-            settingsList.innerHTML += '<p>Chance adjustment not implemented yet.</p>';
+            ['dice', 'roulette', 'coinflip'].forEach(game => {
+                const chance = settings[game]?.chance || 50;
+                settingsList.innerHTML += `
+                    <div>
+                        ${game}: <input type="number" id="chance-${game}" value="${chance}">
+                        <button onclick="setChance('${game}')">Set</button>
+                    </div>
+                `;
+            });
+        }
+
+        function setChance(game) {
+            const val = parseInt(document.getElementById(`chance-${game}`).value);
+            const settings = JSON.parse(localStorage.getItem('gameSettings')) || {};
+            settings[game] = settings[game] || {};
+            settings[game].chance = val;
+            localStorage.setItem('gameSettings', JSON.stringify(settings));
+            alert(`Chance for ${game} set to ${val}%`);
         }
 
         function viewLootboxes() {
             const lootboxes = JSON.parse(localStorage.getItem('lootboxes')) || [];
             const lootboxList = document.getElementById('lootbox-list');
-            lootboxList.innerHTML = '<h4>Lootboxes:</h4>';
-            if (lootboxes.length) {
-                lootboxes.forEach(lb => {
-                    lootboxList.innerHTML += `<div>${lb.name}: ${lb.items ? lb.items.length : 0} items</div>`;
-                });
-            } else {
-                lootboxList.innerHTML += '<p>No lootboxes</p>';
+            lootboxList.innerHTML = '<h4>Lootboxes:</h4><table><tr><th>Name</th><th>Cost</th><th>Quantity</th><th>Items</th><th>Actions</th></tr>';
+            lootboxes.forEach((lb, index) => {
+                lootboxList.innerHTML += `
+                    <tr>
+                        <td>${lb.name}</td>
+                        <td>${lb.cost || 0}</td>
+                        <td>${lb.quantity || 0}</td>
+                        <td>${lb.items ? lb.items.length : 0}</td>
+                        <td>
+                            <button onclick="editLootbox(${index})">Edit</button>
+                            <button onclick="deleteLootbox(${index})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            lootboxList.innerHTML += '</table>';
+        }
+
+        function editLootbox(index) {
+            const lootboxes = JSON.parse(localStorage.getItem('lootboxes')) || [];
+            const lb = lootboxes[index];
+            const newName = prompt('Name:', lb.name);
+            const newCost = parseInt(prompt('Cost:', lb.cost));
+            const newQuantity = parseInt(prompt('Quantity:', lb.quantity));
+            if (newName && newCost && newQuantity) {
+                lootboxes[index] = { ...lb, name: newName, cost: newCost, quantity: newQuantity };
+                localStorage.setItem('lootboxes', JSON.stringify(lootboxes));
+                viewLootboxes();
             }
         }
 
-        function createLootbox() {
-            const name = prompt('Lootbox name:');
-            if (name) {
+        function deleteLootbox(index) {
+            if (confirm('Delete this lootbox?')) {
                 const lootboxes = JSON.parse(localStorage.getItem('lootboxes')) || [];
-                lootboxes.push({ name, items: [] });
+                lootboxes.splice(index, 1);
                 localStorage.setItem('lootboxes', JSON.stringify(lootboxes));
                 viewLootboxes();
             }
