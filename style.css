@@ -603,9 +603,28 @@ footer p {
     border: 1px solid #ff0080;
 }
 
-.admin-list {
-    margin-top: 20px;
+.admin-list table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-list th, .admin-list td {
+    padding: 8px;
     text-align: left;
+    border: 1px solid #ff0080;
+}
+
+.admin-list th {
+    background: #ff0080;
+    color: #fff;
+}
+
+.admin-list button {
+    margin: 2px;
+    padding: 4px 8px;
+    font-size: 0.8em;
+    position: relative;
+    z-index: 12;
 }
 
 .user-item {
