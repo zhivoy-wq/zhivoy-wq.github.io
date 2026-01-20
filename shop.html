@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVSD Grand Casino - Shop</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1 class="neon">MVSD Grand Casino</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="games.html">Games</a>
+            <a href="shop.html">Shop</a>
+            <a href="leaderboard.html">Leaderboard</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+        <div id="auth-buttons">
+            <button id="login-btn" class="btn-small">Login</button>
+            <button id="register-btn" class="btn-small">Register</button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Shop</h2>
+            <p>Browse and buy exclusive skins and items!</p>
+        </div>
+    </section>
+
+    <section class="shop-section">
+        <h3 class="neon-gold">Available Items</h3>
+        <div id="shop-grid" class="game-grid">
+            <!-- Items will be populated here -->
+        </div>
+    </section>
+
+    <!-- Authentication Modals -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login</h2>
+            <form id="login-form">
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <p>Don't have an account? <a href="#" id="switch-to-register">Register here</a></p>
+        </div>
+    </div>
+
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Register</h2>
+            <form id="register-form">
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="text" id="register-username" placeholder="Username" required>
+                <input type="password" id="register-password" placeholder="Password" required>
+                <button type="submit" class="btn">Register</button>
+            </form>
+            <p>Already have an account? <a href="#" id="switch-to-login">Login here</a></p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 MVSD Grand Casino. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Populate shop
+        function populateShop() {
+            const shop = JSON.parse(localStorage.getItem('shop')) || [];
+            const shopGrid = document.getElementById('shop-grid');
+            shopGrid.innerHTML = '';
+            if (shop.length === 0) {
+                shopGrid.innerHTML = '<p>No items in shop yet.</p>';
+                return;
+            }
+            shop.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}" style="width:100px; height:100px; object-fit:cover; border-radius:10px;">
+                    <h4>${item.name}</h4>
+                    <p>Value: ${item.value}</p>
+                    <p>Rarity: ${item.rarity}</p>
+                    <button class="btn buy-btn" data-item="${item.name}">Buy for ${item.value} credits</button>
+                `;
+                shopGrid.appendChild(card);
+            });
+
+            // Add event listeners
+            document.querySelectorAll('.buy-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const itemName = e.target.dataset.item;
+                    buyItem(itemName);
+                });
+            });
+        }
+
+        function buyItem(name) {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) {
+                alert('Please login to buy items.');
+                return;
+            }
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === currentUser.email);
+            const shop = JSON.parse(localStorage.getItem('shop')) || [];
+            const item = shop.find(i => i.name === name);
+            if (!item) return;
+            const cost = parseInt(item.value.replace(/[^0-9]/g, ''));
+            if (user.balance < cost) {
+                alert('Not enough credits!');
+                return;
+            }
+            user.balance -= cost;
+            user.inventory = user.inventory || [];
+            user.inventory.push(item);
+            localStorage.setItem('users', JSON.stringify(users));
+            alert(`Bought ${name}!`);
+            updateUI();
+            populateShop();
+        }
+
+        document.addEventListener('DOMContentLoaded', populateShop);
+    </script>
+</body>
+</html>
