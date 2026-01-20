@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVSD Grand Casino - Admin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1 class="neon">MVSD Grand Casino - Admin</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="games.html">Games</a>
+            <a href="leaderboard.html">Leaderboard</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+        <div id="auth-buttons">
+            <button id="login-btn" class="btn-small">Login</button>
+            <button id="register-btn" class="btn-small">Register</button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Admin Panel</h2>
+            <p>Manage the casino operations.</p>
+        </div>
+    </section>
+
+    <section class="admin-section">
+        <div class="admin-container">
+            <div class="admin-panel">
+                <h3 class="neon-gold">User Management</h3>
+                <button id="view-users-btn" class="btn">View All Users</button>
+                <div id="users-list" class="admin-list"></div>
+            </div>
+            <div class="admin-panel">
+                <h3 class="neon-gold">Game Statistics</h3>
+                <div id="game-stats"></div>
+            </div>
+            <div class="admin-panel">
+                <h3 class="neon-gold">System Controls</h3>
+                <button id="reset-data-btn" class="btn">Reset All Data</button>
+                <button id="export-data-btn" class="btn">Export Data</button>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 MVSD Grand Casino. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Admin functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser || currentUser.username !== 'admin') {
+                document.querySelector('.admin-section').innerHTML = '<p class="neon">Access denied. Admin only.</p>';
+                return;
+            }
+
+            document.getElementById('view-users-btn').addEventListener('click', viewUsers);
+            document.getElementById('reset-data-btn').addEventListener('click', resetData);
+            document.getElementById('export-data-btn').addEventListener('click', exportData);
+
+            updateGameStats();
+        });
+
+        function viewUsers() {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '<h4>All Users:</h4>';
+            users.forEach(user => {
+                usersList.innerHTML += `
+                    <div class="user-item">
+                        <span>${user.username} (${user.email})</span>
+                        <span>Balance: ${user.balance}</span>
+                        <span>Games: ${user.gamesPlayed || 0}</span>
+                        <button onclick="adjustBalance('${user.email}', 100)">+100</button>
+                        <button onclick="adjustBalance('${user.email}', -100)">-100</button>
+                    </div>
+                `;
+            });
+        }
+
+        function adjustBalance(email, amount) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = users.findIndex(u => u.email === email);
+            if (userIndex !== -1) {
+                users[userIndex].balance += amount;
+                if (users[userIndex].balance < 0) users[userIndex].balance = 0;
+                localStorage.setItem('users', JSON.stringify(users));
+                viewUsers();
+                updateGameStats();
+            }
+        }
+
+        function updateGameStats() {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const totalUsers = users.length;
+            const totalBalance = users.reduce((sum, user) => sum + user.balance, 0);
+            const totalGames = users.reduce((sum, user) => sum + (user.gamesPlayed || 0), 0);
+
+            document.getElementById('game-stats').innerHTML = `
+                <p>Total Users: ${totalUsers}</p>
+                <p>Total Credits in Circulation: ${totalBalance}</p>
+                <p>Total Games Played: ${totalGames}</p>
+            `;
+        }
+
+        function resetData() {
+            if (confirm('Are you sure you want to reset all data? This cannot be undone!')) {
+                localStorage.clear();
+                alert('All data reset!');
+                location.reload();
+            }
+        }
+
+        function exportData() {
+            const data = {
+                users: JSON.parse(localStorage.getItem('users')) || [],
+                timestamp: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'casino-data-export.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
