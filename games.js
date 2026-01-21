@@ -5,9 +5,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const playBtns = document.querySelectorAll('.play-btn');
 
     playBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            if (!currentUser) {
+        btn.addEventListener('click', async () => {
+            const user = firebase.auth().currentUser;
+            if (!user) {
                 alert('Please login to play games!');
                 return;
             }
@@ -28,14 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function loadGame(game) {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser) {
-            alert('Please login to play games!');
-            return;
-        }
-
         gameContainer.innerHTML = '';
-
         switch(game) {
             case 'slots':
                 loadSlots();
@@ -71,14 +64,18 @@ document.addEventListener('DOMContentLoaded', function() {
             <p id="slots-result"></p>
         `;
 
-        document.getElementById('spin-btn').addEventListener('click', () => {
+        document.getElementById('spin-btn').addEventListener('click', async () => {
             const bet = parseInt(document.getElementById('slots-bet').value) || 10;
             if (bet < 10) {
                 alert('Minimum bet is 10 credits!');
                 return;
             }
-            deductCredits(bet);
-            spinSlots(bet);
+            try {
+                await deductCredits(bet);
+                spinSlots(bet);
+            } catch (err) {
+                alert(err.message);
+            }
         });
     }
 
@@ -91,15 +88,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let spins = 0;
         const spinInterval = setInterval(() => {
-            reel1.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-            reel2.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-            reel3.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+            reel1.textContent = symbols[getSecureRandom(0, symbols.length - 1)];
+            reel2.textContent = symbols[getSecureRandom(0, symbols.length - 1)];
+            reel3.textContent = symbols[getSecureRandom(0, symbols.length - 1)];
             spins++;
             if (spins > 20) {
                 clearInterval(spinInterval);
-                const final1 = symbols[Math.floor(Math.random() * symbols.length)];
-                const final2 = symbols[Math.floor(Math.random() * symbols.length)];
-                const final3 = symbols[Math.floor(Math.random() * symbols.length)];
+                const final1 = symbols[getSecureRandom(0, symbols.length - 1)];
+                const final2 = symbols[getSecureRandom(0, symbols.length - 1)];
+                const final3 = symbols[getSecureRandom(0, symbols.length - 1)];
                 reel1.textContent = final1;
                 reel2.textContent = final2;
                 reel3.textContent = final3;
@@ -140,15 +137,19 @@ document.addEventListener('DOMContentLoaded', function() {
             <p id="dice-result"></p>
         `;
 
-        document.getElementById('roll-btn').addEventListener('click', () => {
+        document.getElementById('roll-btn').addEventListener('click', async () => {
             const bet = parseInt(document.getElementById('dice-bet').value) || 10;
             const choice = document.getElementById('dice-choice').value;
             if (bet < 10) {
                 alert('Minimum bet is 10 credits!');
                 return;
             }
-            deductCredits(bet);
-            rollDice(bet, choice);
+            try {
+                await deductCredits(bet);
+                rollDice(bet, choice);
+            } catch (err) {
+                alert(err.message);
+            }
         });
     }
 
@@ -160,13 +161,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
         let rolls = 0;
         const rollInterval = setInterval(() => {
-            die1.textContent = diceFaces[Math.floor(Math.random() * 6)];
-            die2.textContent = diceFaces[Math.floor(Math.random() * 6)];
+            die1.textContent = diceFaces[getSecureRandom(0, 5)];
+            die2.textContent = diceFaces[getSecureRandom(0, 5)];
             rolls++;
             if (rolls > 10) {
                 clearInterval(rollInterval);
-                const final1 = Math.floor(Math.random() * 6) + 1;
-                const final2 = Math.floor(Math.random() * 6) + 1;
+                const final1 = getSecureRandom(1, 6);
+                const final2 = getSecureRandom(1, 6);
                 const sum = final1 + final2;
                 die1.textContent = diceFaces[final1 - 1];
                 die2.textContent = diceFaces[final2 - 1];
@@ -201,15 +202,19 @@ document.addEventListener('DOMContentLoaded', function() {
             <p id="roulette-result"></p>
         `;
 
-        document.getElementById('spin-wheel-btn').addEventListener('click', () => {
+        document.getElementById('spin-wheel-btn').addEventListener('click', async () => {
             const betType = document.getElementById('roulette-bet-type').value.toLowerCase();
             const bet = parseInt(document.getElementById('roulette-bet').value) || 10;
             if (bet < 10) {
                 alert('Minimum bet is 10 credits!');
                 return;
             }
-            deductCredits(bet);
-            spinRoulette(bet, betType);
+            try {
+                await deductCredits(bet);
+                spinRoulette(bet, betType);
+            } catch (err) {
+                alert(err.message);
+            }
         });
     }
 
@@ -219,11 +224,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let spins = 0;
         const spinInterval = setInterval(() => {
-            wheel.textContent = Math.floor(Math.random() * 37);
+            wheel.textContent = getSecureRandom(0, 36);
             spins++;
             if (spins > 30) {
                 clearInterval(spinInterval);
-                const winningNumber = Math.floor(Math.random() * 37);
+                const winningNumber = getSecureRandom(0, 36);
                 wheel.textContent = winningNumber;
 
                 let win = false;
@@ -263,14 +268,18 @@ document.addEventListener('DOMContentLoaded', function() {
         let currentMultiplier = 1.00;
         let betAmount = 0;
 
-        document.getElementById('start-crash-btn').addEventListener('click', () => {
+        document.getElementById('start-crash-btn').addEventListener('click', async () => {
             betAmount = parseInt(document.getElementById('crash-bet').value) || 10;
             if (betAmount < 10) {
                 alert('Minimum bet is 10 credits!');
                 return;
             }
-            deductCredits(betAmount);
-            startCrash();
+            try {
+                await deductCredits(betAmount);
+                startCrash();
+            } catch (err) {
+                alert(err.message);
+            }
         });
 
         document.getElementById('cash-out-btn').addEventListener('click', () => {
@@ -291,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('cash-out-btn').disabled = false;
             document.getElementById('crash-result').textContent = '';
 
-            const crashPoint = Math.random() * 10 + 1; // Random crash between 1x and 11x
+            const crashPoint = getSecureRandomFloat(1, 11); // Random crash between 1x and 11x
 
             const gameInterval = setInterval(() => {
                 currentMultiplier += 0.01;
@@ -323,15 +332,19 @@ document.addEventListener('DOMContentLoaded', function() {
             <p id="coin-result"></p>
         `;
 
-        document.getElementById('flip-btn').addEventListener('click', () => {
+        document.getElementById('flip-btn').addEventListener('click', async () => {
             const bet = parseInt(document.getElementById('coin-bet').value) || 10;
             const choice = document.getElementById('coin-choice').value;
             if (bet < 10) {
                 alert('Minimum bet is 10 credits!');
                 return;
             }
-            deductCredits(bet);
-            flipCoin(bet, choice);
+            try {
+                await deductCredits(bet);
+                flipCoin(bet, choice);
+            } catch (err) {
+                alert(err.message);
+            }
         });
     }
 
@@ -341,12 +354,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let flips = 0;
         const flipInterval = setInterval(() => {
-            coin.textContent = Math.random() > 0.5 ? '🪙' : '💰';
+            coin.textContent = getSecureRandom(0, 1) === 0 ? 'Heads' : 'Tails'; // Temporary display
             flips++;
             if (flips > 10) {
                 clearInterval(flipInterval);
-                const outcome = Math.random() > 0.5 ? 'heads' : 'tails';
-                coin.textContent = outcome === 'heads' ? '🪙' : '💰';
+                const outcome = getSecureRandom(0, 1) === 0 ? 'heads' : 'tails';
+                coin.textContent = outcome.charAt(0).toUpperCase() + outcome.slice(1);
 
                 if (outcome === choice) {
                     const winnings = bet * 2;
@@ -362,64 +375,78 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadLootbox() {
         gameContainer.innerHTML = `
-            <h3>📦 Lootbox</h3>
-            <div class="lootbox-container">
-                <div class="lootbox" id="lootbox">📦</div>
-            </div>
+            <h3>📦 Lootboxes</h3>
+            <p>Open a mystery box for rewards!</p>
             <button id="open-lootbox-btn" class="btn">Open Lootbox (Cost: 100 credits)</button>
             <p id="lootbox-result"></p>
         `;
 
-        document.getElementById('open-lootbox-btn').addEventListener('click', () => {
-            deductCredits(100);
-            openLootbox();
+        document.getElementById('open-lootbox-btn').addEventListener('click', async () => {
+            const cost = 100;
+            try {
+                await deductCredits(cost);
+                openLootbox();
+            } catch (err) {
+                alert(err.message);
+            }
         });
     }
 
-    function openLootbox() {
-        const lootbox = document.getElementById('lootbox');
+    async function openLootbox() {
         const result = document.getElementById('lootbox-result');
+        // Example rewards (store in DB for real)
+        const rewards = ['Common Skin (50)', 'Rare Skin (500)', 'Epic Skin (1000)', 'Legendary Skin (5000)'];
+        const reward = rewards[getSecureRandom(0, rewards.length - 1)];
 
-        lootbox.textContent = '🎁';
-        setTimeout(() => {
-            const rewards = ['💎 Rare Skin', '⭐ Common Skin', '🎨 Epic Skin', '🏆 Legendary Skin', '💰 500 Credits', '🎲 Bonus Game'];
-            const reward = rewards[Math.floor(Math.random() * rewards.length)];
-            lootbox.textContent = reward.split(' ')[0]; // Show emoji
-            result.textContent = `You got: ${reward}!`;
+        // Add to inventory
+        const user = firebase.auth().currentUser;
+        const userRef = firebase.firestore().collection('users').doc(user.uid);
+        await userRef.update({
+            inventory: firebase.firestore.FieldValue.arrayUnion({ name: reward.split(' (')[0], value: parseInt(reward.match(/\d+/)[0]) })
+        });
 
-            if (reward.includes('Credits')) {
-                addCredits(500);
-            }
-            updateGamesPlayed();
-        }, 1000);
+        result.textContent = `You got: ${reward}!`;
+        updateGamesPlayed();
     }
 
-    function deductCredits(amount) {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        const userIndex = users.findIndex(u => u.email === currentUser.email);
-        if (users[userIndex].balance >= amount) {
-            users[userIndex].balance -= amount;
-            localStorage.setItem('users', JSON.stringify(users));
-        } else {
-            alert('Not enough credits!');
-            throw new Error('Insufficient funds');
-        }
+    // Firebase balance functions
+    async function deductCredits(amount) {
+        const user = firebase.auth().currentUser;
+        if (!user) throw new Error('Not logged in');
+        const userRef = firebase.firestore().collection('users').doc(user.uid);
+        await firebase.firestore().runTransaction(async (transaction) => {
+            const doc = await transaction.get(userRef);
+            if (!doc.exists) throw new Error('User not found');
+            const currentBalance = doc.data().balance;
+            if (currentBalance < amount) throw new Error('Insufficient funds');
+            transaction.update(userRef, { balance: currentBalance - amount });
+        });
     }
 
-    function addCredits(amount) {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        const userIndex = users.findIndex(u => u.email === currentUser.email);
-        users[userIndex].balance += amount;
-        localStorage.setItem('users', JSON.stringify(users));
+    async function addCredits(amount) {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+        const userRef = firebase.firestore().collection('users').doc(user.uid);
+        await userRef.update({ balance: firebase.firestore.FieldValue.increment(amount) });
     }
 
-    function updateGamesPlayed() {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        const userIndex = users.findIndex(u => u.email === currentUser.email);
-        users[userIndex].gamesPlayed += 1;
-        localStorage.setItem('users', JSON.stringify(users));
+    async function updateGamesPlayed() {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+        const userRef = firebase.firestore().collection('users').doc(user.uid);
+        await userRef.update({ gamesPlayed: firebase.firestore.FieldValue.increment(1) });
+    }
+
+    // Secure random (better than Math.random)
+    function getSecureRandom(min, max) {
+        const array = new Uint32Array(1);
+        crypto.getRandomValues(array);
+        return Math.floor((array[0] / 0xFFFFFFFF) * (max - min + 1)) + min;
+    }
+
+    function getSecureRandomFloat(min, max) {
+        const array = new Uint32Array(1);
+        crypto.getRandomValues(array);
+        return (array[0] / 0xFFFFFFFF) * (max - min) + min;
     }
 });
