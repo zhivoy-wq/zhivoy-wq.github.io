@@ -69,61 +69,66 @@
         <p>&copy; 2026 MVSD Grand Casino. All rights reserved.</p>
     </footer>
 
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
     <script src="script.js"></script>
     <script>
-        // Populate shop
-        function populateShop() {
-            const shop = JSON.parse(localStorage.getItem('shop')) || [];
+        // Populate shop with Firebase
+        async function populateShop() {
+            const db = firebase.firestore();
+            const shopSnapshot = await db.collection('shop').get();  // Assume 'shop' collection
             const shopGrid = document.getElementById('shop-grid');
             shopGrid.innerHTML = '';
-            if (shop.length === 0) {
+            if (shopSnapshot.empty) {
                 shopGrid.innerHTML = '<p>No items in shop yet.</p>';
                 return;
             }
-            shop.forEach(item => {
+            shopSnapshot.forEach(doc => {
+                const item = doc.data();
                 const card = document.createElement('div');
                 card.className = 'game-card';
                 card.innerHTML = `
-                    <img src="${item.image}" alt="${item.name}" style="width:100px; height:100px; object-fit:cover; border-radius:10px;">
+                    <img src="${item.image || 'placeholder.jpg'}" alt="${item.name}" style="width:100px; height:100px; object-fit:cover; border-radius:10px;">
                     <h4>${item.name}</h4>
                     <p>Value: ${item.value}</p>
                     <p>Rarity: ${item.rarity}</p>
-                    <button class="btn buy-btn" data-item="${item.name}">Buy for ${item.value} credits</button>
+                    <button class="btn buy-btn" data-id="${doc.id}">Buy for ${item.value} credits</button>
                 `;
                 shopGrid.appendChild(card);
             });
 
             // Add event listeners
             document.querySelectorAll('.buy-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const itemName = e.target.dataset.item;
-                    buyItem(itemName);
+                btn.addEventListener('click', async (e) => {
+                    const itemId = e.target.dataset.id;
+                    await buyItem(itemId);
                 });
             });
         }
 
-        function buyItem(name) {
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            if (!currentUser) {
+        async function buyItem(itemId) {
+            const user = firebase.auth().currentUser;
+            if (!user) {
                 alert('Please login to buy items.');
                 return;
             }
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.email === currentUser.email);
-            const shop = JSON.parse(localStorage.getItem('shop')) || [];
-            const item = shop.find(i => i.name === name);
+            const db = firebase.firestore();
+            const itemDoc = await db.collection('shop').doc(itemId).get();
+            const item = itemDoc.data();
             if (!item) return;
-            const cost = parseInt(item.value.replace(/[^0-9]/g, ''));
-            if (user.balance < cost) {
-                alert('Not enough credits!');
-                return;
-            }
-            user.balance -= cost;
-            user.inventory = user.inventory || [];
-            user.inventory.push(item);
-            localStorage.setItem('users', JSON.stringify(users));
-            alert(`Bought ${name}!`);
-            updateUI();
+            const cost = item.value;
+
+            const userRef = db.collection('users').doc(user.uid);
+            await db.runTransaction(async (transaction) => {
+                const userDoc = await transaction.get(userRef);
+                if (userDoc.data().balance < cost) throw new Error('Not enough credits!');
+                transaction.update(userRef, {
+                    balance: firebase.firestore.FieldValue.increment(-cost),
+                    inventory: firebase.firestore.FieldValue.arrayUnion(item)
+                });
+            });
+            alert(`Bought ${item.name}!`);
             populateShop();
         }
 
