@@ -1,7 +1,5 @@
 // script.js
 document.addEventListener('DOMContentLoaded', function() {
-    // Existing code...
-
     // Smooth scrolling for navigation links (if on same page)
     const navLinks = document.querySelectorAll('nav a[href^="#"]');
     navLinks.forEach(link => {
@@ -79,6 +77,19 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
 
+    // Firebase Initialization
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
     // Authentication logic
     const loginBtn = document.getElementById('login-btn');
     const registerBtn = document.getElementById('register-btn');
@@ -131,71 +142,77 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Handle registration
-    registerForm.addEventListener('submit', (e) => {
+    registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('register-email').value;
         const username = document.getElementById('register-username').value;
         const password = document.getElementById('register-password').value;
 
-        // Check if user already exists
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        if (users.find(user => user.email === email)) {
-            alert('Email already exists!');
-            return;
-        }
-        if (users.find(user => user.username === username)) {
-            alert('Username already taken!');
-            return;
-        }
+        try {
+            // Validate input
+            if (!email || !username || !password) throw new Error('All fields required');
+            if (password.length < 6) throw new Error('Password must be at least 6 characters');
 
-        // Register user
-        let balance = 1000;
-        if (username === 'admin' && password === 'adminpass') {
-            if (users.find(user => user.username === 'admin')) {
-                alert('Admin already exists!');
+            // Check if username exists (global)
+            const usernameQuery = await db.collection('users').where('username', '==', username).get();
+            if (!usernameQuery.empty) {
+                alert('Username already taken!');
                 return;
             }
-            balance = 999999;
-        } else if (username === 'admin') {
-            alert('Invalid admin credentials!');
-            return;
-        }
-        users.push({ email, username, password, balance, gamesPlayed: 0, inventory: [] });
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('currentUser', JSON.stringify({ email, username }));
 
-        alert(`Registration successful! You start with ${balance} credits.`);
-        registerModal.style.display = 'none';
-        updateUI();
+            // Create user
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+
+            let balance = 1000;
+            let isAdmin = false;
+            if (username === 'admin' && password === 'adminpass') {  // Temp; remove after first admin creation
+                isAdmin = true;
+                balance = 999999;
+            } else if (username === 'admin') {
+                alert('Invalid admin credentials!');
+                return;
+            }
+
+            // Store in DB
+            await db.collection('users').doc(user.uid).set({
+                email,
+                username,
+                balance,
+                gamesPlayed: 0,
+                inventory: [],
+                isAdmin
+            });
+
+            alert(`Registration successful! You start with ${balance} credits.`);
+            registerModal.style.display = 'none';
+        } catch (error) {
+            alert(error.message);
+        }
     });
 
     // Handle login
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
 
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        const user = users.find(user => user.email === email && user.password === password);
-
-        if (user) {
-            localStorage.setItem('currentUser', JSON.stringify({ email: user.email, username: user.username }));
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
             alert('Login successful!');
             loginModal.style.display = 'none';
-            updateUI();
-        } else {
-            alert('Invalid credentials!');
+        } catch (error) {
+            alert(error.message);
         }
     });
 
     // Show inventory
-    function showInventory() {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser) return;
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        const user = users.find(u => u.email === currentUser.email);
-        const inventory = user.inventory || [];
-        let msg = `Inventory for ${currentUser.username}:\n`;
+    async function showInventory() {
+        const user = auth.currentUser;
+        if (!user) return;
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        const inventory = userDoc.data().inventory || [];
+        let msg = `Inventory:\n`;
         if (inventory.length) {
             inventory.forEach(item => msg += `- ${item.name} (${item.value})\n`);
         } else {
@@ -205,25 +222,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Update UI based on login status
-    function updateUI() {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (currentUser) {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.email === currentUser.email);
-            const balance = user ? user.balance : 0;
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (!userDoc.exists) return;
+            const userData = userDoc.data();
             document.getElementById('auth-buttons').innerHTML = `
-                <span>Welcome, ${currentUser.username}!</span>
-                <span>Balance: ${balance} credits</span>
+                <span>Welcome, ${userData.username}!</span>
+                <span>Balance: ${userData.balance} credits</span>
                 <button id="inventory-btn" class="btn-small">Inventory</button>
                 <button id="logout-btn" class="btn-small">Logout</button>
             `;
-            if (currentUser.username === 'admin') {
+            if (userData.isAdmin) {
                 document.getElementById('auth-buttons').innerHTML += `<a href="admin.html" class="btn-small">Admin</a>`;
             }
-            document.getElementById('logout-btn').addEventListener('click', () => {
-                localStorage.removeItem('currentUser');
-                updateUI();
-            });
+            document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
             document.getElementById('inventory-btn').addEventListener('click', showInventory);
         } else {
             document.getElementById('auth-buttons').innerHTML = `
@@ -238,8 +251,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 registerModal.style.display = 'block';
             });
         }
-    }
-
-    // Initialize UI
-    updateUI();
+    });
 });
